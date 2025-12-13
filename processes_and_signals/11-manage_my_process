@@ -4,26 +4,39 @@
 PID_FILE="/var/run/my_process.pid"
 DAEMON="./manage_my_process"
 
-case "$1" in
+SUDO=""
+if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+  SUDO="sudo"
+fi
+
+start_proc() {
+  # Run daemon detached and write PID (needs root for /var/run)
+  $SUDO sh -c "nohup $DAEMON >/dev/null 2>&1 & echo \$! > $PID_FILE"
+  echo "manage_my_process started"
+}
+
+stop_proc() {
+  if $SUDO test -f "$PID_FILE"; then
+    PID="$($SUDO cat "$PID_FILE" 2>/dev/null)"
+    if [ -n "$PID" ]; then
+      $SUDO kill "$PID" 2>/dev/null || true
+      $SUDO kill -9 "$PID" 2>/dev/null || true
+    fi
+    $SUDO rm -f "$PID_FILE"
+  fi
+  echo "manage_my_process stopped"
+}
+
+case "${1:-}" in
   start)
-    nohup "$DAEMON" >/dev/null 2>&1 &
-    echo "$!" > "$PID_FILE"
-    echo "manage_my_process started"
+    start_proc
     ;;
   stop)
-    if [ -f "$PID_FILE" ]; then
-      kill -9 "$(cat "$PID_FILE")" 2>/dev/null
-      rm -f "$PID_FILE"
-    fi
-    echo "manage_my_process stopped"
+    stop_proc
     ;;
   restart)
-    if [ -f "$PID_FILE" ]; then
-      kill -9 "$(cat "$PID_FILE")" 2>/dev/null
-      rm -f "$PID_FILE"
-    fi
-    nohup "$DAEMON" >/dev/null 2>&1 &
-    echo "$!" > "$PID_FILE"
+    stop_proc
+    start_proc
     echo "manage_my_process restarted"
     ;;
   *)
