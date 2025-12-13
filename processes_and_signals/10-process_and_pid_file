@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This script handles signals and manages a PID file
+# This script creates a PID file, runs indefinitely, and handles signals
 
 echo "$$" > /var/run/myscript.pid
 
