@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# This init script manages the manage_my_process daemon
+
+PIDFILE="/var/run/my_process.pid"
+
+start_daemon() {
+    ./manage_my_process &
+    echo $! > "$PIDFILE"
+    echo "manage_my_process started"
+}
+
+stop_daemon() {
+    if [ -f "$PIDFILE" ]
+    then
+        kill "$(cat "$PIDFILE")"
+        rm -f "$PIDFILE"
+    fi
+    echo "manage_my_process stopped"
+}
+
+case "$1" in
+    start)
+        start_daemon
+        ;;
+    stop)
+        stop_daemon
+        ;;
+    restart)
+        stop_daemon
+        start_daemon
+        echo "manage_my_process restarted"
+        ;;
+    *)
+        echo "Usage: manage_my_process {start|stop|restart}"
+        ;;
+esac
