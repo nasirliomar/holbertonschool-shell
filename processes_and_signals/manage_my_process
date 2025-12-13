@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-# Indefinitely writes "I am alive!" to /tmp/my_process every 2 seconds
-
-OUT_FILE="/tmp/my_process"
+# Writes "I am alive!" to /tmp/my_process every 2 seconds forever
 
 while true; do
-  echo "I am alive!" >> "$OUT_FILE"
+  echo "I am alive!" >> /tmp/my_process
   sleep 2
 done
