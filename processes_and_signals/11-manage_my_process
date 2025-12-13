@@ -1,32 +1,37 @@
 #!/usr/bin/env bash
-# Init script to manage manage_my_process daemon
+# Simple init-style script to manage manage_my_process
 
 PID_FILE="/var/run/my_process.pid"
-PROCESS="./manage_my_process"
+DAEMON="./manage_my_process"
 
-case "$1" in
-    start)
-        $PROCESS &
-        echo $! > "$PID_FILE"
-        echo "manage_my_process started"
-        ;;
-    stop)
-        if [ -f "$PID_FILE" ]; then
-            kill "$(cat "$PID_FILE")"
-            rm -f "$PID_FILE"
-        fi
-        echo "manage_my_process stopped"
-        ;;
-    restart)
-        if [ -f "$PID_FILE" ]; then
-            kill "$(cat "$PID_FILE")"
-            rm -f "$PID_FILE"
-        fi
-        $PROCESS &
-        echo $! > "$PID_FILE"
-        echo "manage_my_process restarted"
-        ;;
-    *)
-        echo "Usage: manage_my_process {start|stop|restart}"
-        ;;
+start_process() {
+  sudo bash -c "nohup $DAEMON >/dev/null 2>&1 & echo \$! > $PID_FILE"
+  echo "manage_my_process started"
+}
+
+stop_process() {
+  if [ -f "$PID_FILE" ]; then
+    PID="$(cat "$PID_FILE")"
+    sudo kill "$PID" 2>/dev/null || true
+    sudo rm -f "$PID_FILE"
+  fi
+  echo "manage_my_process stopped"
+}
+
+case "${1:-}" in
+  start)
+    start_process
+    ;;
+  stop)
+    stop_process
+    ;;
+  restart)
+    stop_process
+    start_process
+    echo "manage_my_process restarted"
+    ;;
+  *)
+    echo "Usage: manage_my_process {start|stop|restart}"
+    exit 1
+    ;;
 esac
