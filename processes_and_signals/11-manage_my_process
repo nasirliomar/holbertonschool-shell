@@ -2,41 +2,40 @@
 # Init script to start, stop, and restart manage_my_process
 
 PID_FILE="/var/run/my_process.pid"
-DAEMON="./manage_my_process"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+DAEMON="$DIR/manage_my_process"
 
 SUDO=""
 if [ "${EUID:-$(id -u)}" -ne 0 ]; then
   SUDO="sudo"
 fi
 
-start_proc() {
-  # Run daemon detached and write PID (needs root for /var/run)
-  $SUDO sh -c "nohup $DAEMON >/dev/null 2>&1 & echo \$! > $PID_FILE"
-  echo "manage_my_process started"
+do_start() {
+  $SUDO sh -c "nohup \"$DAEMON\" >/dev/null 2>&1 & echo \$! > \"$PID_FILE\""
 }
 
-stop_proc() {
+do_stop() {
   if $SUDO test -f "$PID_FILE"; then
     PID="$($SUDO cat "$PID_FILE" 2>/dev/null)"
     if [ -n "$PID" ]; then
       $SUDO kill "$PID" 2>/dev/null || true
-      $SUDO kill -9 "$PID" 2>/dev/null || true
     fi
     $SUDO rm -f "$PID_FILE"
   fi
-  echo "manage_my_process stopped"
 }
 
 case "${1:-}" in
   start)
-    start_proc
+    do_start
+    echo "manage_my_process started"
     ;;
   stop)
-    stop_proc
+    do_stop
+    echo "manage_my_process stopped"
     ;;
   restart)
-    stop_proc
-    start_proc
+    do_stop
+    do_start
     echo "manage_my_process restarted"
     ;;
   *)
