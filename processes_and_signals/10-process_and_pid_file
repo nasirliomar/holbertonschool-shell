@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Creates a PID file and handles signals properly
+# Creates a PID file and handles signals
 
-echo "$$" | sudo tee /var/run/myscript.pid >/dev/null
+echo "$$" > /var/run/myscript.pid
 
 cleanup() {
-    sudo rm -f /var/run/myscript.pid
+    rm -f /var/run/myscript.pid
     exit 0
 }
 
